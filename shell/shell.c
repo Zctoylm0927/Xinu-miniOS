@@ -23,7 +23,8 @@ const	struct	cmdent	cmdtab[] = {
 	{"sleep",	FALSE,	xsh_sleep},
 	{"uptime",	FALSE,	xsh_uptime},
 	{"?",		FALSE,	xsh_help},
-	{"lab2",	FALSE,	_2020200671_xsh_lab2}
+	{"lab2",	FALSE,	_2020200671_xsh_lab2},
+	{"lab3",	FALSE,	u2020200671_xsh_lab3}
 
 };
 
@@ -272,15 +273,24 @@ process	shell (
 		}
 
 		/* Spawn child thread for non-built-in commands */
-
-		child = create(cmdtab[j].cfunc,
-			SHELL_CMDSTK, SHELL_CMDPRIO,
-			cmdtab[j].cname, 2, ntok, &tmparg);
-
+		/*Lab3 2020200671:Begin*/
+		int user = 0;
+		if(strcmp(cmdtab[j].cname,"lab3") == 0) {
+			user = 1;
+			child = create(cmdtab[j].cfunc,
+				SHELL_CMDSTK, SHELL_CMDPRIO,
+				cmdtab[j].cname, 1, 2, ntok, &tmparg);
+		}
+		else {
+			child = create(cmdtab[j].cfunc,
+				SHELL_CMDSTK, SHELL_CMDPRIO,
+				cmdtab[j].cname, 0, 2, ntok, &tmparg);
+		}
+		/*Lab3 2020200671:End*/
 		/* If creation or argument copy fails, report error */
 
 		if ((child == SYSERR) ||
-		    (addargs(child, ntok, tok, tlen, tokbuf, &tmparg)
+		    (addargs(child, ntok, tok, tlen, user, tokbuf, &tmparg)
 							== SYSERR) ) {
 			fprintf(dev, SHELL_CREATMSG);
 			continue;

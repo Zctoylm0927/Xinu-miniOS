@@ -82,7 +82,7 @@ void	nulluser()
 	/* Create a process to finish startup and start main */
 
 	resume(create((void *)startup, INITSTK, INITPRIO,
-					"Startup process", 0, NULL));
+					"Startup process", 0, 0, NULL));
 
 	/* Become the Null process (i.e., guarantee that the CPU has	*/
 	/*  something to run when no other process is ready to execute)	*/
@@ -109,7 +109,7 @@ local process	startup(void)
 	/* Create a process to execute function main() */
 
 	resume(create((void *)main, INITSTK, INITPRIO,
-					"Main process", 0, NULL));
+					"Main process", 0, 0, NULL));
 
 	/* Startup process exits at this point */
 
@@ -145,6 +145,7 @@ static	void	sysinit()
 	/* Initialize free memory list */
 	
 	meminit();
+	k2020200671_ltss(GDT_TSS << 3);
 
 	/* Initialize system variables */
 
@@ -163,6 +164,7 @@ static	void	sysinit()
 		prptr->prstate = PR_FREE;
 		prptr->prname[0] = NULLCH;
 		prptr->prstkbase = NULL;
+		prptr->uprstkbase = NULL;
 		prptr->prprio = 0;
 	}
 

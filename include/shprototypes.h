@@ -75,3 +75,6 @@ extern	shellcmd  xsh_help	(int32, char *[]);
 
 /* in file xsh_lab2.c */
 extern	shellcmd  _2020200671_xsh_lab2	(int32, char *[]);
+
+/* in file xsh_lab3.c */
+extern  shellcmd u2020200671_xsh_lab3(int nargs, char *args[]);

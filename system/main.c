@@ -20,7 +20,7 @@ process	main(void)
 	/* Run the Xinu shell */
 
 	recvclr();
-	resume(create(shell, 8192, 50, "shell", 1, CONSOLE));
+	resume(create(shell, 8192, 50, "shell", 0, 1, CONSOLE));
 
 	//resume(create(sndA, 4096, 20, "processA", 1, CONSOLE));
 	//resume(create(sndB, 4096, 20, "processB", 1, CONSOLE));
@@ -31,7 +31,7 @@ process	main(void)
 		receive();
 		sleepms(200);
 		kprintf("\n\nMain process recreating shell\n\n");
-		resume(create(shell, 4096, 20, "shell", 1, CONSOLE));
+		resume(create(shell, 4096, 20, "shell", 0, 1, CONSOLE));
 	}
 	return OK;
     

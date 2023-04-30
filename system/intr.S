@@ -469,7 +469,82 @@ _Xint46:
 	pushl	%eax
 	pushl	$46
 	jmp	Xtrap
+/*Lab3 2020200671:Begin*/
+	.globl  _Xint49
+_Xint48:
+	pushl %ds
+	pushl %es
+	pushl %fs
+	pushl %gs
 
+	movl $(0x2 << 3), %ebx
+	movw %bx, %ds
+	movw %bx, %es
+	movw %bx, %fs
+	movw %bx, %gs
+
+	push %esi
+	push %edi
+	call k2020200671_printf
+	pop %ebx
+	pop %ebx
+
+	popl %gs
+	popl %fs
+	popl %es
+	popl %ds
+	iret
+
+	.globl  _Xint50
+_Xint49:
+	jmp userret
+
+	.globl  _Xint50
+_Xint50:
+	pushl %ds
+	pushl %es
+	pushl %fs
+	pushl %gs
+
+	movl $(0x2 << 3), %ebx
+	movw %bx, %ds
+	movw %bx, %es
+	movw %bx, %fs
+	movw %bx, %gs
+
+	push %edi
+	call sleep
+	pop %ebx
+
+	popl %gs
+	popl %fs
+	popl %es
+	popl %ds
+	iret
+
+	.globl  _Xint51
+_Xint51:
+	pushl %ds
+	pushl %es
+	pushl %fs
+	pushl %gs
+
+	movl $(0x2 << 3), %ebx
+	movw %bx, %ds
+	movw %bx, %es
+	movw %bx, %fs
+	movw %bx, %gs
+
+	push %edi
+	call k2020200671_create
+	pop %ebx
+
+	popl %gs
+	popl %fs
+	popl %es
+	popl %ds
+	iret
+/*Lab3 2020200671:End*/
 
 
 /*------------------------------------------------------------------------
@@ -528,3 +603,9 @@ defevec:
 	.long	_Xint45			/* available for ext. interrupt	*/
 	.long	_Xint46			/* available for ext. interrupt	*/
 	.long	spurious_irq15
+	/*Lab3 2020200671:Begin*/
+	.long	_Xint48			/* my interrupt	for printf*/
+	.long   _Xint49         /* my interrupt	for u2k*/
+	.long   _Xint50         /* my interrupt	for sleep*/
+	.long   _Xint51         /* my interrupt	for create*/
+	/*Lab3 2020200671:End*/

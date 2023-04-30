@@ -53,7 +53,7 @@ void _2020200671_delay_test(int seconds, char* p) {
 void _2020200671_delay(int seconds, void* func, ...) {
     va_list ap;
     va_start (ap, func);
-    pid32 pid = create(_2020200671_delay_test, 8192, 30, "delay_test", 2, seconds, ap);
+    pid32 pid = create(_2020200671_delay_test, 8192, 30, "delay_test", 0, 2, seconds, ap);
     resume(pid);
     va_end(ap);
 }
