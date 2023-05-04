@@ -38,7 +38,7 @@ extern	void	u2020200671_ret_u2k(void);
 extern	void	u2020200671_printf(int, int);
 
 /* in file Lab3_sleep.S */
-extern	void	u2020200671_sleep();
+extern	void	u2020200671_sleep(int);
 
 /* in file Lab3_create.S */
 extern	int	    u2020200671_create(void * , uint32, int, char *, uint32, ...);

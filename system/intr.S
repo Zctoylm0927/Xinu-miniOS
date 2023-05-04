@@ -470,7 +470,7 @@ _Xint46:
 	pushl	$46
 	jmp	Xtrap
 /*Lab3 2020200671:Begin*/
-	.globl  _Xint49
+	.globl  _Xint48
 _Xint48:
 	pushl %ds
 	pushl %es
@@ -495,7 +495,7 @@ _Xint48:
 	popl %ds
 	iret
 
-	.globl  _Xint50
+	.globl  _Xint49
 _Xint49:
 	jmp userret
 

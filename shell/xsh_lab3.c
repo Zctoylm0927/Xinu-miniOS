@@ -26,12 +26,11 @@ void u2020200671_uptest(int a, int b) {
     int pid = getpid();
     int s1 = a, s2 = b;
     u2020200671_printf(pid,s1);
-    //u2020200671_sleep(1);
+    u2020200671_sleep(1);
     u2020200671_printf(pid,s2);
 }
 
 shellcmd u2020200671_xsh_lab3(int nargs, char *args[]) {    
-    u2020200671_sleep(2);
     u2020200671_create(u2020200671_uptest, 8192, 20, "uptest", 2, 3, 4);
     return 0;
 }

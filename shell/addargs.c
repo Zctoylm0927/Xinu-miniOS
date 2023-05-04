@@ -51,15 +51,33 @@ status	addargs(
 	/*	strings							*/
 	
 	/*Lab3 2020200671:Begin*/
-	if(!user) {
-	aloc = (uint32) (prptr->prstkbase
+	if(user) {
+		aloc = (uint32) (prptr->uprstkbase
 		- prptr->prstklen + sizeof(uint32));
-	}
-	else {
-	aloc = (uint32) (prptr->uprstkbase
-		- prptr->prstklen + sizeof(uint32));
+		argloc = (uint32*) ((aloc + 3) & ~0x3);
+
+		argstr = (char *) (argloc + (ntok+1));
+
+		for (aptr=argloc, i=0; i < ntok; i++) {
+			*aptr++ = (uint32) (argstr + tok[i]);
+		}
+		*aptr++ = (uint32)NULL;
+		memcpy(aptr, tokbuf, tlen);
+		for (search = (uint32 *)prptr->uprstkptr;
+			search < (uint32 *)prptr->uprstkbase; search++) {
+
+			/* If found, replace with the address of the args vector*/
+
+			if (*search == (uint32)dummy) {
+				*search = (uint32)argloc;
+				restore(mask);
+				return OK;
+			}
+		}
 	}
 	/*Lab3 2020200671:End*/
+	aloc = (uint32) (prptr->prstkbase
+		- prptr->prstklen + sizeof(uint32));
 	argloc = (uint32*) ((aloc + 3) & ~0x3);	/* round multiple of 4	*/
 
 	/* Compute the first location beyond args array for the strings	*/
@@ -83,34 +101,15 @@ status	addargs(
 	memcpy(aptr, tokbuf, tlen);
 
 	/* Find the second argument in process's stack */
-	/*Lab3 2020200671:Begin*/
-	if(!user) {
-		for (search = (uint32 *)prptr->prstkptr;
-			search < (uint32 *)prptr->prstkbase; search++) {
-
+	for (search = (uint32 *)prptr->prstkptr;
+		search < (uint32 *)prptr->prstkbase; search++) {
 			/* If found, replace with the address of the args vector*/
-
-			if (*search == (uint32)dummy) {
-				*search = (uint32)argloc;
-				restore(mask);
-				return OK;
-			}
+		if (*search == (uint32)dummy) {
+			*search = (uint32)argloc;
+			restore(mask);
+			return OK;
 		}
 	}
-	else {
-		for (search = (uint32 *)prptr->uprstkptr;
-			search < (uint32 *)prptr->uprstkbase; search++) {
-
-			/* If found, replace with the address of the args vector*/
-
-			if (*search == (uint32)dummy) {
-				*search = (uint32)argloc;
-				restore(mask);
-				return OK;
-			}
-		}
-	}
-	/*Lab3 2020200671:End*/
 	/* Argument value not found on the stack - report an error */
 
 	restore(mask);

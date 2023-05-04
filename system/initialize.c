@@ -145,6 +145,7 @@ static	void	sysinit()
 	/* Initialize free memory list */
 	
 	meminit();
+	//Lab3 2020200671
 	k2020200671_ltss(GDT_TSS << 3);
 
 	/* Initialize system variables */
