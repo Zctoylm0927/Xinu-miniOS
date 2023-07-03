@@ -46,53 +46,53 @@ pid32	currpid;		/* ID of currently executing process	*/
 
 void	nulluser()
 {	
-	struct	memblk	*memptr;	/* Ptr to memory block		*/
-	uint32	free_mem;		/* Total amount of free memory	*/
+	// struct	memblk	*memptr;	/* Ptr to memory block		*/
+	// uint32	free_mem;		/* Total amount of free memory	*/
 	
-	/* Initialize the system */
+	// /* Initialize the system */
 
-	sysinit();
+	// sysinit();
 
-	/* Output Xinu memory layout */
-	free_mem = 0;
-	for (memptr = memlist.mnext; memptr != NULL;
-						memptr = memptr->mnext) {
-		free_mem += memptr->mlength;
-	}
+	// /* Output Xinu memory layout */
+	// free_mem = 0;
+	// for (memptr = memlist.mnext; memptr != NULL;
+	// 					memptr = memptr->mnext) {
+	// 	free_mem += memptr->mlength;
+	// }
 	
-	kprintf("%10d bytes of free memory.  Free list:\n", free_mem);
-	for (memptr=memlist.mnext; memptr!=NULL;memptr = memptr->mnext) {
-	    kprintf("           [0x%08X to 0x%08X]\n",
-		(uint32)memptr, ((uint32)memptr) + memptr->mlength - 1);
-	}
+	// kprintf("%10d bytes of free memory.  Free list:\n", free_mem);
+	// for (memptr=memlist.mnext; memptr!=NULL;memptr = memptr->mnext) {
+	//     kprintf("           [0x%08X to 0x%08X]\n",
+	// 	(uint32)memptr, ((uint32)memptr) + memptr->mlength - 1);
+	// }
 
-	kprintf("%10d bytes of Xinu code.\n",
-		(uint32)&etext - (uint32)&text);
-	kprintf("           [0x%08X to 0x%08X]\n",
-		(uint32)&text, (uint32)&etext - 1);
-	kprintf("%10d bytes of data.\n",
-		(uint32)&ebss - (uint32)&data);
-	kprintf("           [0x%08X to 0x%08X]\n\n",
-		(uint32)&data, (uint32)&ebss - 1);
+	// kprintf("%10d bytes of Xinu code.\n",
+	// 	(uint32)&etext - (uint32)&text);
+	// kprintf("           [0x%08X to 0x%08X]\n",
+	// 	(uint32)&text, (uint32)&etext - 1);
+	// kprintf("%10d bytes of data.\n",
+	// 	(uint32)&ebss - (uint32)&data);
+	// kprintf("           [0x%08X to 0x%08X]\n\n",
+	// 	(uint32)&data, (uint32)&ebss - 1);
 
-	/* Enable interrupts */
+	// /* Enable interrupts */
 
-	enable();
+	// enable();
 
-	/* Create a process to finish startup and start main */
+	// /* Create a process to finish startup and start main */
 
-	resume(create((void *)startup, INITSTK, INITPRIO,
-					"Startup process", 0, 0, NULL));
+	// resume(create((void *)startup, INITSTK, INITPRIO,
+	// 				"Startup process", 0, 0, NULL));
 
-	/* Become the Null process (i.e., guarantee that the CPU has	*/
-	/*  something to run when no other process is ready to execute)	*/
+	// /* Become the Null process (i.e., guarantee that the CPU has	*/
+	// /*  something to run when no other process is ready to execute)	*/
 
-	while (TRUE) {
+	// while (TRUE) {
 
-		/* Halt until there is an external interrupt */
+	// 	/* Halt until there is an external interrupt */
 
-		asm volatile ("hlt");
-	}
+	// 	asm volatile ("hlt");
+	// }
 
 }
 

@@ -75,20 +75,20 @@ pid32	ucreate(
 	*saddr = STACKMAGIC;
 	savsp = (uint32)saddr;
 	
-    uint32* sp = lastargs;
 	/*Lab3 2020200671:Begin*/
+	uint32* sp = lastargs;
 	if(user) {
 		*usaddr = STACKMAGIC;
-		for ( ; nargs > 0 ; nargs--)
-			*--usaddr = *lastargs--;
+		for (int i = nargs ; i > 0 ; i--)
+			*--usaddr = *sp--;
 		*--usaddr = (long)u2020200671_ret_u2k;
 	}
+    sp = lastargs;
 	/*Lab3 2020200671:End*/
-    lastargs = sp;
 
 	/* Push arguments */
 	for ( ; nargs > 0 ; nargs--)	/* Machine dependent; copy args	*/
-		*--saddr = *lastargs--;	/* onto created process's stack	*/
+		*--saddr = *sp--;	/* onto created process's stack	*/
 	*--saddr = (long)INITRET;	/* Push on return address	*/
 
 	/*Lab3 2020200671:Begin*/
@@ -97,7 +97,7 @@ pid32	ucreate(
 	if(user) {
 		*--saddr = BASE_USER_SS;
 		*--saddr = (uint32)usaddr;
-		asm("pushfl"); saddr--;
+		*--saddr = 0x00000200;
 		*--saddr = BASE_USER_CS;
 	}
 	/*Lab3 2020200671:End*/

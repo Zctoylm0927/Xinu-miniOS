@@ -35,6 +35,7 @@ struct __attribute__ ((__packed__)) sd {
 #define FLAGS_GRANULARITY	0x80
 #define FLAGS_SIZE		0x40
 #define	FLAGS_SETTINGS		(FLAGS_GRANULARITY | FLAGS_SIZE)
+struct taskstate TSS;
 
 struct sd gdt_copy[NGD] = {
 /*   sd_lolimit  sd_lobase   sd_midbase  sd_access   sd_hilim_fl sd_hibase */

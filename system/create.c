@@ -83,7 +83,7 @@ pid32	create(
 		*usaddr = STACKMAGIC;
 		a = (uint32 *)(&nargs + 1);	
 		a += nargs -1;
-		for ( ; nargs > 0 ; nargs--)
+		for (int j = nargs ; j > 0 ; j--)
 			*--usaddr = *a--;
 		*--usaddr = (long)u2020200671_ret_u2k;
 	}
@@ -103,7 +103,7 @@ pid32	create(
 	if(user) {
 		*--saddr = BASE_USER_SS;
 		*--saddr = (uint32)usaddr;
-		asm("pushfl"); saddr--;
+		*--saddr = 0x00000200;
 		*--saddr = BASE_USER_CS;
 	}
 	/*Lab3 2020200671:End*/

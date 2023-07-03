@@ -24,7 +24,8 @@ const	struct	cmdent	cmdtab[] = {
 	{"uptime",	FALSE,	xsh_uptime},
 	{"?",		FALSE,	xsh_help},
 	{"lab2",	FALSE,	_2020200671_xsh_lab2},
-	{"lab3",	FALSE,	u2020200671_xsh_lab3}
+	{"lab3",	FALSE,	u2020200671_xsh_lab3},
+	{"lab4",	FALSE,	u2020200671_xsh_lab4}
 
 };
 
@@ -275,11 +276,11 @@ process	shell (
 		/* Spawn child thread for non-built-in commands */
 		/*Lab3 2020200671:Begin*/
 		int user = 0;
-		if(strcmp(cmdtab[j].cname,"lab3") == 0) {
-			user = 0;
+		if(strcmp(cmdtab[j].cname,"lab3") == 0 || strcmp(cmdtab[j].cname,"lab4") == 0) {
+			user = 1;
 			child = create(cmdtab[j].cfunc,
 				SHELL_CMDSTK, SHELL_CMDPRIO,
-				cmdtab[j].cname, 0, 2, ntok, &tmparg);
+				cmdtab[j].cname, 1, 2, ntok, &tmparg);
 		}
 		else {
 			child = create(cmdtab[j].cfunc,

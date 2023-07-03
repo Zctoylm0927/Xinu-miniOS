@@ -31,10 +31,7 @@ syscall	kill(
 	}
 	freestk(prptr->prstkbase, prptr->prstklen);
 	//Lab3 2020200671
-	if(prptr->uprstkbase != NULL && prptr->uprstkptr != NULL) {
-		freestk(prptr->uprstkbase, prptr->prstklen);
-		prptr->uprstkbase = NULL;
-	}
+	if(prptr->uprstkbase != NULL && prptr->uprstkptr != NULL) freestk(prptr->uprstkbase, prptr->prstklen);
 	switch (prptr->prstate) {
 	case PR_CURR:
 		prptr->prstate = PR_FREE;	/* Suicide */

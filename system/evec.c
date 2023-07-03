@@ -34,7 +34,7 @@ uint16	girmask;
 #define	EOI	0x20		/* non-specific end of interrupt	*/
 
 //Lab3 2020200671
-#define NID		52	/* Number of interrupt descriptors	*/
+#define NID		53	/* Number of interrupt descriptors	*/
 #define	IGDT_TRAPG	15	/* Trap Gate				*/
 #define	IGDT_INTRG	0xe	/* Interrupt Gate			*/
 

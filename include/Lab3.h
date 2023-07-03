@@ -43,4 +43,4 @@ extern	void	u2020200671_sleep(int);
 /* in file Lab3_create.S */
 extern	int	    u2020200671_create(void * , uint32, int, char *, uint32, ...);
 
-struct taskstate TSS;
+extern  struct taskstate TSS;
