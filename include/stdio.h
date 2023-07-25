@@ -23,6 +23,10 @@ extern	int32	fprintf(int, char *, ...);
 extern	int32	printf(const char *, ...);
 extern	int32	sprintf(char *, char *, ...);
 
+/*Lab4 2020200671:Begin*/
+#define u2020200671_syscall_fprintf(...) do_generic_syscall(int32, SYSCALL_FPRINTF, __VA_ARGS__)
+#define u2020200671_syscall_printf(...) do_generic_syscall(int32, SYSCALL_PRINTF, __VA_ARGS__)
+/*Lab4 2020200671:End*/
 
 /* Prototypes for character input and output functions */
 

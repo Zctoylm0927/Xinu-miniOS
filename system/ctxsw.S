@@ -7,6 +7,8 @@
  * ctxsw -  X86 context switch; the call is ctxsw(&old_sp, &new_sp)
  *------------------------------------------------------------------------
  */
+
+/*lab4 Begin	*/
 ctxsw:
 		pushl	%ebp		/* Push ebp onto stack		*/
 		movl	%esp,%ebp	/* Record current SP in ebp	*/
@@ -20,12 +22,14 @@ ctxsw:
 		movl	%esp,(%eax)	/* Save old process's SP	*/
 		movl	12(%ebp),%eax	/* Get location from which to	*/
 					/*   restore new process's SP	*/
-
+		//Lab4 2020200671
+		movl	16(%ebp), %ebx
 		/* The next instruction switches from the old process's	*/
 		/*   stack to the new process's stack.			*/
 
-		movl	(%eax),%esp	/* Pop up new process's SP	*/
-
+		movl	(%eax), %esp	/* Pop up new process's SP	*/
+		//Lab4 2020200671
+		movl	%ebx, %cr3
 		/* Restore new seg. registers here, if multiple allowed */
 
 		popal			/* Restore general registers	*/

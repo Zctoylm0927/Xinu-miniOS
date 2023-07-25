@@ -18,7 +18,11 @@ struct	mbootinfo *bootinfo = (struct mbootinfo *)1;
 				/*  segment and not the BSS		*/
 
 /* Segment table structures */
-
+/* taskstate */
+#define GDT_ENTRY_TSS 0x7
+struct taskstate TSS = {
+	.ss0 = 0x3 << 3
+};
 /* Segment Descriptor */
 
 struct __attribute__ ((__packed__)) sd {
@@ -30,8 +34,8 @@ struct __attribute__ ((__packed__)) sd {
 	unsigned char	sd_hibase;
 };
 
-// Lab3 2020200671
 #define	NGD			8	/* Number of global descriptor entries	*/
+#define TSS_ID		7	/* TSS in gbt	*/
 #define FLAGS_GRANULARITY	0x80
 #define FLAGS_SIZE		0x40
 #define	FLAGS_SETTINGS		(FLAGS_GRANULARITY | FLAGS_SIZE)
@@ -46,43 +50,41 @@ struct sd gdt_copy[NGD] = {
 {       0xffff,          0,           0,      0x92,         0xcf,        0, },
 /* 3rd, Kernel Stack Segment */
 {       0xffff,          0,           0,      0x92,         0xcf,        0, },
-/*Lab3 2020200671:Begin*/
 /* 4th, User Code Segment */
 {       0xffff,          0,           0,      0xfa,         0xcf,        0, },
 /* 5th, User Data Segment */
 {       0xffff,          0,           0,      0xf2,         0xcf,        0, },
 /* 6th, User Stack Segment */
 {       0xffff,          0,           0,      0xf2,         0xcf,        0, },
-/* 7th, TSS*/
+[GDT_ENTRY_TSS] = 
+/* 7th, TSS */
 {       0xffff,          0,           0,      0x89,         0x00,        0, },
-/*Lab3 2020200671:End*/
 };
 
-extern	struct	sd gdt[];	/* Global segment table			*/
+extern	struct	sd	gdt[];		/* Global segment table		*/
+
+/* Lab4 2020200671:Begin*/
+uint32	*freelist;
+extern	struct	pgtab	*kpgdir;	/* Kernel page table directory	*/
+struct	pgtab	*kpg[2];		/* Kernel page table		*/
+
+struct	pgtab	*pgdir = (struct pgtab *)0x00802000;
+/* Lab4 2020200671:End*/
 
 /*------------------------------------------------------------------------
- * meminit - initialize memory bounds and the free memory list
+ * vminit - initialize virtual memory bounds and the free memory list
  *------------------------------------------------------------------------
  */
-void	meminit(void) {
-
-	struct	memblk	*memptr;	/* Ptr to memory block		*/
+ /*Lab4 2020200671:Begin*/
+void	vminit(void) {
 	struct	mbmregion	*mmap_addr;	/* Ptr to mmap entries		*/
 	struct	mbmregion	*mmap_addrend;	/* Ptr to end of mmap region	*/
-	struct	memblk	*next_memptr;	/* Ptr to next memory block	*/
-	uint32	next_block_length;	/* Size of next memory block	*/
 
 	mmap_addr = (struct mbmregion*)NULL;
 	mmap_addrend = (struct mbmregion*)NULL;
 
-	/* Initialize the free list */
-	memptr = &memlist;
-	memptr->mnext = (struct memblk *)NULL;
-	memptr->mlength = 0;
-
-	/* Initialize the memory counters */
-	/*    Heap starts at the end of Xinu image */
-	minheap = (void*)&end;
+	// set the heap to the kernal stack
+	minheap = (void*)((uint32)&end + 0x802000);
 	maxheap = minheap;
 
 	/* Check if Xinu was loaded using the multiboot specification	*/
@@ -101,6 +103,7 @@ void	meminit(void) {
 	mmap_addrend = (struct mbmregion*)((uint8*)mmap_addr + bootinfo->mmap_length);
 
 	/* Read mmap blocks and initialize the Xinu free memory list	*/
+	uint32 flist_addr = (uint32)&end + 8192;
 	while(mmap_addr < mmap_addrend) {
 
 		/* If block is not usable, skip to next block */
@@ -119,43 +122,62 @@ void	meminit(void) {
 			continue;
 		}
 
-		/* The block is usable, so add it to Xinu's memory list */
+		/* The block is usable, so add the pages to Xinu's (virtual) memory list */
 
-		/* This block straddles the end of the Xinu image */
-		if((mmap_addr->base_addr <= (uint32)minheap) &&
-		  ((mmap_addr->base_addr + mmap_addr->length) >
-		  (uint32)minheap)) {
-
-			/* This is the first free block, base address is the minheap */
-			next_memptr = (struct memblk *)roundmb(minheap);
-
-			/* Subtract Xinu image from length of block */
-			next_block_length = (uint32)truncmb(mmap_addr->base_addr + mmap_addr->length - (uint32)minheap);
-		} else {
-
-			/* Handle a free memory block other than the first one */
-			next_memptr = (struct memblk *)roundmb(mmap_addr->base_addr);
-
-			/* Initialize the length of the block */
-			next_block_length = (uint32)truncmb(mmap_addr->length);
+		uint32 page_start = roundpg(mmap_addr->base_addr);
+		while (page_start < truncpg(mmap_addr->base_addr + mmap_addr->length)) {
+			uint32 rec_addr = ph2recpg(page_start);
+			uint32 *rec_phyaddr = (uint32 *)(rec_addr - 0x400000 + flist_addr);
+			*rec_phyaddr = (uint32)freelist;
+			freelist = (uint32 *)rec_addr;
+			page_start += PAGE_SIZE;
 		}
-
-		/* Add then new block to the free list */
-		memptr->mnext = next_memptr;
-		memptr = memptr->mnext;
-		memptr->mlength = next_block_length;
-		memlist.mlength += next_block_length;
 
 		/* Move to the next mmap block */
 		mmap_addr = (struct mbmregion*)((uint8*)mmap_addr + mmap_addr->size + 4);
 	}
 
-	/* End of all mmap blocks, and so end of Xinu free list */
-	if(memptr) {
-		memptr->mnext = (struct memblk *)NULL;
-	}
-}
+	int i;
+	kpgdir = (struct pgtab *)(flist_addr + 0x400000);	/* end+8KB+4MB	*/
+	kpg[0] = kpgdir + 1;
+	kpg[1] = kpgdir + 2;
 
+	proctab[NULLPROC].prpgdir = (uint32)kpgdir;
+
+	// initialize kpgdir(global page table)
+	kpgdir->entry[0] = (uint32)kpg[0] | PT_ENTRY_P | PT_ENTRY_W | PT_ENTRY_U;
+	kpgdir->entry[1] = (uint32)kpg[1] | PT_ENTRY_P | PT_ENTRY_W | PT_ENTRY_U;
+	kpgdir->entry[2] = (uint32)kpgdir | PT_ENTRY_P | PT_ENTRY_W | PT_ENTRY_U;
+	for (i = 3; i < PT_NENTRY; i++) {
+		kpgdir->entry[i] = 0;
+	}
+
+	// initialize kernal page table[0]
+	uint32 npage_code = (uint32)&end / PAGE_SIZE;
+	memset((void *)kpg[0]->entry, 0, sizeof(struct pgtab));
+	for (i = 0; i < npage_code; i++) {
+		uint32 page_start = i << 12;
+		if (page_start < (1 << 20)) {	/* I/O mapping		*/
+			kpg[0]->entry[i] = page_start | PT_ENTRY_P | PT_ENTRY_W;
+		} 
+		else if (i < npage_code) {	/* Xinu code and data	*/
+			kpg[0]->entry[i] = page_start | PT_ENTRY_P | PT_ENTRY_W | PT_ENTRY_U;
+		}
+	}
+	kpg[0]->entry[i] = (i << 12);
+	kpg[0]->entry[i + 1] = ((i + 1) << 12) | PT_ENTRY_P | PT_ENTRY_W;
+
+	// initialize kernal page table[1]
+	for (i = 0; i < PT_NENTRY; i++) {
+		uint32 page_start = flist_addr + (i << 12);
+		kpg[1]->entry[i] = page_start | PT_ENTRY_P | PT_ENTRY_W;
+	}
+
+	// redirect to the user stack
+	minheap = (void *)0x00C00000;
+	maxheap = (void *)0xFE000000;
+}
+ /*Lab4 2020200671:End*/
 
 /*------------------------------------------------------------------------
  * setsegs  -  Initialize the global segment table
@@ -183,14 +205,23 @@ void	setsegs()
 	psd->sd_lolimit = ds_end;
 	psd->sd_hilim_fl = FLAGS_SETTINGS | ((ds_end >> 16) & 0xff);
 
-	/*Lab3 2020200671:Begin*/
-	psd = &gdt_copy[7];	/* TSS segment */
-	psd->sd_lolimit = 0xffff & (sizeof(struct taskstate) - 1);
-	uint32 base = (uint32)&TSS;
-	psd->sd_lobase = base & 0xffff;
-	psd->sd_midbase = (base>>16) & 0xff;
-	psd->sd_hibase = (base>>24) & 0xff; 
-	/*Lab3 2020200671:End*/
-	
+	psd = &gdt_copy[4];	/* User code segment */
+	psd->sd_lolimit = np;
+	psd->sd_hilim_fl = FLAGS_SETTINGS | ((np >> 16) & 0xff);
+
+	psd = &gdt_copy[5];	/* User data segment */
+	psd->sd_lolimit = ds_end;
+	psd->sd_hilim_fl = FLAGS_SETTINGS | ((ds_end >> 16) & 0xff);
+
+	psd = &gdt_copy[6];	/* User stack segment */
+	psd->sd_lolimit = ds_end;
+	psd->sd_hilim_fl = FLAGS_SETTINGS | ((ds_end >> 16) & 0xff);
+
+	psd = &gdt_copy[GDT_ENTRY_TSS];	/* TSS descriptor */
+	psd->sd_lolimit = sizeof(TSS) - 1;
+	psd->sd_lobase = (long)&TSS;
+	psd->sd_midbase = ((long)(&TSS) >> 16) & 0xFF;
+	psd->sd_hibase = ((long)(&TSS) >> 24) & 0xFF;
+
 	memcpy(gdt, gdt_copy, sizeof(gdt_copy));
 }

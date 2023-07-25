@@ -44,26 +44,17 @@ pid32	currpid;		/* ID of currently executing process	*/
  *------------------------------------------------------------------------
  */
 
-void	nulluser()
-{	
-	struct	memblk	*memptr;	/* Ptr to memory block		*/
-	uint32	free_mem;		/* Total amount of free memory	*/
-	
-	/* Initialize the system */
 
+void	nulluser()
+{
+	/*Lab4 2020200671:Begin*/
 	sysinit();
 
 	/* Output Xinu memory layout */
-	free_mem = 0;
-	for (memptr = memlist.mnext; memptr != NULL;
-						memptr = memptr->mnext) {
-		free_mem += memptr->mlength;
-	}
-	
-	kprintf("%10d bytes of free memory.  Free list:\n", free_mem);
-	for (memptr=memlist.mnext; memptr!=NULL;memptr = memptr->mnext) {
-	    kprintf("           [0x%08X to 0x%08X]\n",
-		(uint32)memptr, ((uint32)memptr) + memptr->mlength - 1);
+	uint32 free_page = 0;
+	uint32* cur;
+	for (cur = freelist; cur != NULL; cur = (uint32 *)*cur) {
+		free_page += 1;
 	}
 
 	kprintf("%10d bytes of Xinu code.\n",
@@ -72,9 +63,12 @@ void	nulluser()
 		(uint32)&text, (uint32)&etext - 1);
 	kprintf("%10d bytes of data.\n",
 		(uint32)&ebss - (uint32)&data);
-	kprintf("           [0x%08X to 0x%08X]\n\n",
+	kprintf("           [0x%08X to 0x%08X]\n",
 		(uint32)&data, (uint32)&ebss - 1);
-
+	kprintf("%10d free pages of Xinu.\n", free_page);
+	kprintf("           [0x%08X to 0x%08X]\n\n",
+		(uint32)&freelist, (uint32)&cur);
+	/*Lab4 2020200671:End*/
 	/* Enable interrupts */
 
 	enable();
@@ -82,7 +76,7 @@ void	nulluser()
 	/* Create a process to finish startup and start main */
 
 	resume(create((void *)startup, INITSTK, INITPRIO,
-					"Startup process", 0, 0, NULL));
+					"Startup process", 0, NULL));
 
 	/* Become the Null process (i.e., guarantee that the CPU has	*/
 	/*  something to run when no other process is ready to execute)	*/
@@ -107,10 +101,9 @@ void	nulluser()
 local process	startup(void)
 {
 	/* Create a process to execute function main() */
-
-	resume(create((void *)main, INITSTK, INITPRIO,
-					"Main process", 0, 0, NULL));
-
+	/*Lab4 2020200671:Begin*/
+	u2020200671_syscall_resume(u2020200671_syscall_create((void *)main, INITSTK, INITPRIO, "Main process", 0, NULL));
+	/*Lab4 2020200671:End*/
 	/* Startup process exits at this point */
 
 	return OK;
@@ -141,12 +134,6 @@ static	void	sysinit()
 	/* Initialize the interrupt vectors */
 
 	initevec();
-	
-	/* Initialize free memory list */
-	
-	meminit();
-	//Lab3 2020200671
-	k2020200671_ltss(GDT_TSS << 3);
 
 	/* Initialize system variables */
 
@@ -164,8 +151,8 @@ static	void	sysinit()
 		prptr = &proctab[i];
 		prptr->prstate = PR_FREE;
 		prptr->prname[0] = NULLCH;
-		prptr->prstkbase = NULL;
-		prptr->uprstkbase = NULL;
+		prptr->kstkbase = NULL;
+		prptr->userstkbase = NULL;
 		prptr->prprio = 0;
 	}
 
@@ -175,7 +162,9 @@ static	void	sysinit()
 	prptr->prstate = PR_CURR;
 	prptr->prprio = 0;
 	strncpy(prptr->prname, "prnull", 7);
-	prptr->prstkbase = getstk(NULLSTK);
+	//Lab4 2020200671
+	prptr->kstkbase = (char *)((uint32)&end + 2 * PAGE_SIZE - 4);
+	prptr->userstkbase = NULL;	/* nulluser is kernal thread	*/
 	prptr->prstklen = NULLSTK;
 	prptr->prstkptr = 0;
 	currpid = NULLPROC;

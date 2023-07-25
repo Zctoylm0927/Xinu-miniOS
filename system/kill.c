@@ -12,7 +12,7 @@ syscall	kill(
 {
 	intmask	mask;			/* Saved interrupt mask		*/
 	struct	procent *prptr;		/* Ptr to process's table entry	*/
-	int32	i;			/* Index into descriptors	*/
+	int32	i, j;			/* Index into descriptors	*/
 
 	mask = disable();
 	if (isbadpid(pid) || (pid == NULLPROC)
@@ -29,12 +29,29 @@ syscall	kill(
 	for (i=0; i<3; i++) {
 		close(prptr->prdesc[i]);
 	}
-	freestk(prptr->prstkbase, prptr->prstklen);
-	//Lab3 2020200671
-	if(prptr->uprstkbase != NULL && prptr->uprstkptr != NULL) {
-		freestk(prptr->uprstkbase, prptr->prstklen);
-		prptr->uprstkbase = NULL;
+	
+	/*Lab4 2020200671:Begin*/
+	/* Free stack, heap and page table of this process */
+	struct pgtab *cur_pgtable;
+	/* Heap and user stack */
+	for (i = 3; i < PT_NENTRY; i++) {
+		if ((pgdir->entry[i] & PT_ENTRY_P) == 0) continue;
+		cur_pgtable = (struct pgtab *)(0x00800000 + (i << 12));
+		for (j = 0; j < PT_NENTRY; j++) {
+			if (cur_pgtable->entry[j] & PT_ENTRY_P) {
+				pfree(getaddr(cur_pgtable->entry[j]));
+			}
+		}
+		pfree(getaddr(pgdir->entry[i]));
 	}
+	/* Kernel stack */
+	j = (uint32)&end / PAGE_SIZE + 1;
+	cur_pgtable = (struct pgtab *)0x00800000;
+	pfree(getaddr(cur_pgtable->entry[j]));
+	pfree(getaddr(pgdir->entry[0]));
+	pfree(prptr->prpgdir);
+	/*Lab4 2020200671:End*/
+
 	switch (prptr->prstate) {
 	case PR_CURR:
 		prptr->prstate = PR_FREE;	/* Suicide */

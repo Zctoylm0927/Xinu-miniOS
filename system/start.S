@@ -45,8 +45,8 @@
 
 #define	MULTIBOOT_HEADER_MAGIC  0x1BADB002
 #define	MULTIBOOT_HEADER_FLAGS  0x00010003
-#define MULTIBOOT_SIGNATURE	0x2BADB002	/* Multiboot signature verification	*/
-#define MULTIBOOT_BOOTINFO_MMAP	0x00000040	/* mmap_length mmap_addr valid		*/
+#define MULTIBOOT_SIGNATURE	0x2BADB002	/* Multiboot signature verification		*/
+#define MULTIBOOT_BOOTINFO_MMAP	0x00000040	/* mmap_length mmap_addr valid			*/
 //Lab3 2020200671
 #define	GDT_ENTRIES		8
 #define	GDT_ENTRY_SIZE		8
@@ -54,7 +54,11 @@
 #define	IDT_ENTRIES		256
 #define	IDT_ENTRY_SIZE		8
 #define	IDT_BYTES		(IDT_ENTRIES * IDT_ENTRY_SIZE)
-#define NULLSTK			(8192)		/* This must match NULLSTK defined in kernel.h 		*/
+#define NULLSTK			(8192)		/* This must match NULLSTK defined in kernel.h 	*/
+
+//Lab4 2020200671
+#define CR0_PG			0x80000000
+#define CR0_WP			0x00010000
 
 	.data
 
@@ -69,6 +73,9 @@ gdtr:	.word	(GDT_BYTES-1)		# sizeof _gdt -1 (in bytes)
 idt:	.space	IDT_BYTES       	
 idtr:	.word	(IDT_BYTES-1)		# size of _idt -1 (in bytes)
 	.long	idt			# global pointer to the idt
+
+	.globl	kpgdir
+kpgdir:	.long	0
 
 	.globl	cpudelay
 cpudelay:	.long	1
@@ -103,78 +110,13 @@ start:
 	jne	halt
 	testb	$MULTIBOOT_BOOTINFO_MMAP, (%ebx)
 	je	halt
-	
+
 	/*
-	 * Iterate through the memory map segments to find the highest
-	 *   address that will fit the null stack
+	 * Stack pointer set continue with boot
 	 */
-	movl	0x30(%ebx), %ecx	# Load mmap_addr
-	movl	0x2C(%ebx), %edx 	# Load mmap_length
-	andl	$0xfffffffc, %edx	# Load mmap_end
-	addl	%ecx, %edx
-	movl	$0x0, %esp		# Initialize stack pointer to some small value
-
-mmap_search_start:
-	cmpl	%edx, %ecx		# If mmap_addr >= mmap_end then quit
-	jae	mmap_search_done
-
-	# skip memory segment if it is not usable
-	movl	20(%ecx), %eax		# Test the address block type
-	cmpl	$0x01, %eax		# If type is not equal to 1
-	jne	mmap_search_next_sgmt	#   then this is not a usable block
-
-	# skip memory segment if it is within the memory for Xinu
-	movl	4(%ecx), %eax		# Load memory address of segment
-	movl	12(%ecx), %ebx		# Load segment size
-	add	%ebx, %eax		# Find end of memory segment
-	movl	$end, %ebx		# Load end of xinu
-	cmpl	%ebx, %eax		# Compare segment and xinu end
-	jle	mmap_search_next_sgmt	# Skip if segment is within xinu
-	
-	# Segment is usable and not within xinu memory region
-	#   Check if it is big enough to hold the null stack
-	#   Subtract off any memory location that overlaps the
-	#     the Xinu memory region
-	movl	4(%ecx), %eax		# Load memory address of segment
-	movl	$end, %ebx		# Load end of xinu
-	subl	%eax, %ebx		# Determine overlap
-	movl	12(%ecx), %eax		# Load segment size
-	cmpl	$0x0, %ebx		# Check if overlap is greater than zero
-	jl	mmap_search_no_overlap
-	subl	%ebx, %eax		# Subtract overlap size
-mmap_search_no_overlap:
-	cmpl	$NULLSTK, %eax		# Compare with nullstack size
-	jl	mmap_search_next_sgmt
-	
-	# Segment is big enough to hold the null stack
-	#   want to save the highest possible address
-	#   check if segment is larger than current stack pointer
-	movl	4(%ecx), %eax		# Load memory address of segment
-	movl	12(%ecx), %ebx		# Load segment size
-	addl	%ebx, %eax		# Retrieve segment end
-	cmpl	%esp, %eax		# Compare segment and stack pointer
-	jl	mmap_search_next_sgmt	# Skip segment if less than
-	
-	# Segment is big enough to hold the nullstack
-	#   and larger than the current stack pointer
-	#   Use the end of the new segment as the null stack
-	#     Round to the nearest block and subtract 4 (for STACKMAGIC)
-	movl	%eax, %esp
-	addl	$0x7, %esp
-	andl	$0xFFFFFFF8, %esp
-	subl	$0x4, %esp
-
-mmap_search_next_sgmt:
-	movl	(%ecx), %eax		# Load the entry_size
-	addl	%eax, %ecx		# mmap_addr += entry_size + 4
-	addl	$0x4, %ecx
-	jmp	mmap_search_start
-	
-mmap_search_done:
-
-	# Stack pointer set continue with boot
+	movl	$(end + 0x1FFC), %esp	# (end + 8kb - 4)
 	movl	%esp, %ebp
-	
+
 	/*
 	 * Clear flags.
 	 */
@@ -197,8 +139,12 @@ mmap_search_done:
 	 * Set up the global descriptor table.
 	 */
 	call	setsegs
-
 	lgdt	gdtr
+
+	//Lab4 2020200671
+	movl	$(0x7 << 3), %eax
+	ltr	%ax
+
 	/*
 	 * Reload segment registers; load code segment by a far
 	 * jump
@@ -212,6 +158,18 @@ gdt1:
 	movw	%ax, %gs
 	movl	$0x18, %eax	/* SS descriptor 3 */
 	movw	%ax, %ss
+
+	/*
+	 * Initialize virtual memory and Open PG
+	 */
+	/*Lab4 2020200671:Begin*/
+	call	vminit	
+	movl	kpgdir, %eax
+	movl	%eax, %cr3
+	movl	%cr0, %eax
+	orl	$(CR0_PG | CR0_WP), %eax
+	movl	%eax, %cr0
+	/*Lab4 2020200671:End*/
 	
 	/*
 	 * Call the nulluser to initialize the system

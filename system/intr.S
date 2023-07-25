@@ -477,17 +477,17 @@ _Xint48:
 	pushl %fs
 	pushl %gs
 
-	movl $(0x2 << 3), %ebx
-	movw %bx, %ds
-	movw %bx, %es
-	movw %bx, %fs
-	movw %bx, %gs
+	movl $(0x2 << 3), %eax
+	movw %ax, %ds
+	movw %ax, %es
+	movw %ax, %fs
+	movw %ax, %gs
 
 	push %esi
 	push %edi
 	call k2020200671_printf
-	pop %ebx
-	pop %ebx
+	pop %ecx
+	pop %ecx
 
 	popl %gs
 	popl %fs
@@ -506,15 +506,15 @@ _Xint50:
 	pushl %fs
 	pushl %gs
 
-	movl $(0x2 << 3), %ebx
-	movw %bx, %ds
-	movw %bx, %es
-	movw %bx, %fs
-	movw %bx, %gs
+	movl $(0x2 << 3), %eax
+	movw %ax, %ds
+	movw %ax, %es
+	movw %ax, %fs
+	movw %ax, %gs
 
 	push %edi
 	call sleep
-	pop %ebx
+	pop %ecx
 
 	popl %gs
 	popl %fs
@@ -529,15 +529,15 @@ _Xint51:
 	pushl %fs
 	pushl %gs
 
-	movl $(0x2 << 3), %ebx
-	movw %bx, %ds
-	movw %bx, %es
-	movw %bx, %fs
-	movw %bx, %gs
+	movl $(0x2 << 3), %eax
+	movw %ax, %ds
+	movw %ax, %es
+	movw %ax, %fs
+	movw %ax, %gs
 
 	push %edi
 	call k2020200671_create
-	pop %ebx
+	pop %ecx
 
 	popl %gs
 	popl %fs
@@ -545,6 +545,51 @@ _Xint51:
 	popl %ds
 	iret
 /*Lab3 2020200671:End*/
+/*Lab4 2020200671:Begin*/
+	.globl  _Xint52			/* Syscalls			*/
+_Xint52:
+	addl	$20, %esp
+	movl	%esp, (%eax)		/* Addr. of TSS.esp0		*/
+	subl	$20, %esp
+
+	pushl	%ds
+	pushl	%es
+	pushl	%fs
+	pushl	%gs
+
+	movl	$0x10, %eax		/* Data Segment of Kernel Mode	*/
+	movw	%ax, %ds
+	movw	%ax, %es
+	movw	%ax, %fs
+	movw	%ax, %gs
+
+	movl	(%ecx), %eax		/* # of args.			*/
+	leal	(%ecx, %eax, 4), %ecx	/* Addr. of last arg.		*/
+
+	pushl	%ebx			/* Return Value Addr.		*/
+	movl	%eax, %ebx
+
+.LoopBegin:
+	testl	%eax, %eax
+	je	.LoopEnd
+	pushl	(%ecx)
+	subl	$4, %ecx
+	subl	$1, %eax
+	jmp	.LoopBegin
+
+.LoopEnd:
+	call	*%edx
+
+	leal	(%esp, %ebx, 4), %esp
+	popl	%edx
+	movl	%eax, (%edx)
+	
+	popl	%gs
+	popl	%fs
+	popl	%es
+	popl	%ds
+	iret
+/*Lab4 2020200671:End*/
 
 
 /*------------------------------------------------------------------------
@@ -609,3 +654,5 @@ defevec:
 	.long   _Xint50         /* my interrupt	for sleep*/
 	.long   _Xint51         /* my interrupt	for create*/
 	/*Lab3 2020200671:End*/
+	//Lab4 2020200671
+	.long   _Xint52         /* my interrupt	for all*/ 

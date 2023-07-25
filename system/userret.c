@@ -8,5 +8,6 @@
  */
 void	userret(void)
 {
-	kill(getpid());			/* Force process to exit */
+	//Lab4 2020200671
+	u2020200671_syscall_kill(u2020200671_syscall_getpid());
 }

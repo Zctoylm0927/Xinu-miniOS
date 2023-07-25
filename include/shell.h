@@ -4,7 +4,8 @@
 
 #define SHELL_BUFLEN	TY_IBUFLEN+1	/* Length of input buffer	*/
 #define SHELL_MAXTOK	32		/* Maximum tokens per line	*/
-#define SHELL_CMDSTK	8192		/* Size of stack for process	*/
+//Lab4 2020200671
+#define SHELL_CMDSTK	4096		/* Size of stack for process	*/
 					/*    that executes command	*/
 #define	SHELL_ARGLEN	(SHELL_BUFLEN+SHELL_MAXTOK) /* Argument area	*/
 #define SHELL_CMDPRIO	20		/* Process priority for command	*/

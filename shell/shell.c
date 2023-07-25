@@ -24,7 +24,8 @@ const	struct	cmdent	cmdtab[] = {
 	{"uptime",	FALSE,	xsh_uptime},
 	{"?",		FALSE,	xsh_help},
 	{"lab2",	FALSE,	_2020200671_xsh_lab2},
-	{"lab3",	FALSE,	u2020200671_xsh_lab3}
+	{"lab3",	FALSE,	u2020200671_xsh_lab3},
+	{"lab4",	FALSE,	u2020200671_xsh_lab4}
 
 };
 
@@ -47,6 +48,7 @@ uint32	ncmd = sizeof(cmdtab) / sizeof(struct cmdent);
 /*									*/
 /************************************************************************/
 
+/*Lab4 20200671:Begin*/
 process	shell (
 		did32	dev		/* ID of tty device from which	*/
 	)				/*   to accept commands		*/
@@ -85,11 +87,11 @@ process	shell (
 
 	/* Print shell banner and startup message */
 
-	fprintf(dev, "\n\n%s%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n",
+	u2020200671_syscall_fprintf(dev, "\n\n%s%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n",
 		SHELL_BAN0,SHELL_BAN1,SHELL_BAN2,SHELL_BAN3,SHELL_BAN4,
 		SHELL_BAN5,SHELL_BAN6,SHELL_BAN7,SHELL_BAN8,SHELL_BAN9);
 
-	fprintf(dev, "%s\n\n", SHELL_STRTMSG);
+	u2020200671_syscall_fprintf(dev, "%s\n\n", SHELL_STRTMSG);
 
 	/* Continually prompt the user, read input, and execute command	*/
 
@@ -97,11 +99,11 @@ process	shell (
 
 		/* Display prompt */
 
-		fprintf(dev, SHELL_PROMPT);
+		u2020200671_syscall_fprintf(dev, SHELL_PROMPT);
 
 		/* Read a command */
 
-		len = read(dev, buf, sizeof(buf));
+		len = u2020200671_syscall_read(dev, buf, sizeof(buf));
 
 		/* Exit gracefully on end-of-file */
 
@@ -124,14 +126,14 @@ process	shell (
 		/* Handle parsing error */
 
 		if (ntok == SYSERR) {
-			fprintf(dev,"%s\n", SHELL_SYNERRMSG);
+			u2020200671_syscall_fprintf(dev,"%s\n", SHELL_SYNERRMSG);
 			continue;
 		}
 
 		/* If line is empty, go to next input line */
 
 		if (ntok == 0) {
-			fprintf(dev, "\n");
+			u2020200671_syscall_fprintf(dev, "\n");
 			continue;
 		}
 
@@ -152,7 +154,7 @@ process	shell (
 		if ( (ntok >=3) && ( (toktyp[ntok-2] == SH_TOK_LESS)
 				   ||(toktyp[ntok-2] == SH_TOK_GREATER))){
 			if (toktyp[ntok-1] != SH_TOK_OTHER) {
-				fprintf(dev,"%s\n", SHELL_SYNERRMSG);
+				u2020200671_syscall_fprintf(dev,"%s\n", SHELL_SYNERRMSG);
 				continue;
 			}
 			if (toktyp[ntok-2] == SH_TOK_LESS) {
@@ -168,18 +170,18 @@ process	shell (
 		if ( (ntok >=3) && ( (toktyp[ntok-2] == SH_TOK_LESS)
 				   ||(toktyp[ntok-2] == SH_TOK_GREATER))){
 			if (toktyp[ntok-1] != SH_TOK_OTHER) {
-				fprintf(dev,"%s\n", SHELL_SYNERRMSG);
+				u2020200671_syscall_fprintf(dev,"%s\n", SHELL_SYNERRMSG);
 				continue;
 			}
 			if (toktyp[ntok-2] == SH_TOK_LESS) {
 				if (inname != NULL) {
-				    fprintf(dev,"%s\n", SHELL_SYNERRMSG);
+				    u2020200671_syscall_fprintf(dev,"%s\n", SHELL_SYNERRMSG);
 				    continue;
 				}
 				inname = &tokbuf[tok[ntok-1]];
 			} else {
 				if (outname != NULL) {
-				    fprintf(dev,"%s\n", SHELL_SYNERRMSG);
+				    u2020200671_syscall_fprintf(dev,"%s\n", SHELL_SYNERRMSG);
 				    continue;
 				}
 				outname = &tokbuf[tok[ntok-1]];
@@ -196,7 +198,7 @@ process	shell (
 			}
 		}
 		if ((ntok == 0) || (i < ntok)) {
-			fprintf(dev, SHELL_SYNERRMSG);
+			u2020200671_syscall_fprintf(dev, SHELL_SYNERRMSG);
 			continue;
 		}
 
@@ -226,7 +228,7 @@ process	shell (
 		/* Handle command not found */
 
 		if (j >= ncmd) {
-			fprintf(dev, "command %s not found\n", tokbuf);
+			u2020200671_syscall_fprintf(dev, "command %s not found\n", tokbuf);
 			continue;
 		}
 
@@ -234,7 +236,7 @@ process	shell (
 
 		if (cmdtab[j].cbuiltin) { /* No background or redirect. */
 			if (inname != NULL || outname != NULL || backgnd){
-				fprintf(dev, SHELL_BGERRMSG);
+				u2020200671_syscall_fprintf(dev, SHELL_BGERRMSG);
 				continue;
 			} else {
 				/* Set up arg vector for call */
@@ -256,64 +258,59 @@ process	shell (
 		/* Open files and redirect I/O if specified */
 
 		if (inname != NULL) {
-			stdinput = open(NAMESPACE,inname,"ro");
+			stdinput = u2020200671_syscall_open(NAMESPACE,inname,"ro");
 			if (stdinput == SYSERR) {
-				fprintf(dev, SHELL_INERRMSG, inname);
+				u2020200671_syscall_fprintf(dev, SHELL_INERRMSG, inname);
 				continue;
 			}
 		}
 		if (outname != NULL) {
-			stdoutput = open(NAMESPACE,outname,"w");
+			stdoutput = u2020200671_syscall_open(NAMESPACE,outname,"w");
 			if (stdoutput == SYSERR) {
-				fprintf(dev, SHELL_OUTERRMSG, outname);
+				u2020200671_syscall_fprintf(dev, SHELL_OUTERRMSG, outname);
 				continue;
 			} else {
-				control(stdoutput, F_CTL_TRUNC, 0, 0);
+				u2020200671_syscall_control(stdoutput, F_CTL_TRUNC, 0, 0);
 			}
 		}
 
 		/* Spawn child thread for non-built-in commands */
-		/*Lab3 2020200671:Begin*/
-		int user = 0;
-		if(strcmp(cmdtab[j].cname,"lab3") == 0) {
-			user = 0;
-			child = create(cmdtab[j].cfunc,
-				SHELL_CMDSTK, SHELL_CMDPRIO,
-				cmdtab[j].cname, 0, 2, ntok, &tmparg);
-		}
-		else {
-			child = create(cmdtab[j].cfunc,
-				SHELL_CMDSTK, SHELL_CMDPRIO,
-				cmdtab[j].cname, 0, 2, ntok, &tmparg);
-		}
-		/*Lab3 2020200671:End*/
+		/*Lab4 2020200671:Begin*/
+		child = u2020200671_syscall_create(cmdtab[j].cfunc,
+			SHELL_CMDSTK, SHELL_CMDPRIO,
+			cmdtab[j].cname, 2, ntok, &tmparg);
+
+		/*Lab4 2020200671:End*/
+		
 		/* If creation or argument copy fails, report error */
 
-		//Lab3 2020200671
+		/*Lab4 2020200671:Begin*/
 		if ((child == SYSERR) ||
-		    (addargs(child, ntok, tok, tlen, user, tokbuf, &tmparg)
+		    (u2020200671_syscall_addargs(child, ntok, tok, tlen, tokbuf, &tmparg)
 							== SYSERR) ) {
-			fprintf(dev, SHELL_CREATMSG);
+			u2020200671_syscall_fprintf(dev, SHELL_CREATMSG);
 			continue;
 		}
+		/*Lab4 2020200671:End*/
 
 		/* Set stdinput and stdoutput in child to redirect I/O */
 
 		proctab[child].prdesc[0] = stdinput;
 		proctab[child].prdesc[1] = stdoutput;
 
-		msg = recvclr();
-		resume(child);
+		msg = u2020200671_syscall_recvclr();
+		u2020200671_syscall_resume(child);
 		if (! backgnd) {
-			msg = receive();
+			msg = u2020200671_syscall_receive();
 			while (msg != child) {
-				msg = receive();
+				msg = u2020200671_syscall_receive();
 			}
 		}
     }
 
     /* Terminate the shell process by returning from the top level */
 
-    fprintf(dev,SHELL_EXITMSG);
+    u2020200671_syscall_fprintf(dev,SHELL_EXITMSG);
     return OK;
 }
+/*Lab4 20200671:End*/

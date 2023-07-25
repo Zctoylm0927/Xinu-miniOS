@@ -44,18 +44,20 @@ struct procent {		/* Entry in the process table		*/
 	uint16	prstate;	/* Process state: PR_CURR, etc.		*/
 	pri16	prprio;		/* Process priority			*/
 	char	*prstkptr;	/* Saved stack pointer			*/
-	char	*prstkbase;	/* Base of run time stack		*/
+	char	*prkstp;	/* Kernel stack pointer		*/
+	//Lab4 2020200671
+	char	*kstkbase;	/* Base of run time kernel stack		*/
+	//Lab3 2020200671
+	char	*userstkbase;	/* Base of run time user stack		*/
 	uint32	prstklen;	/* Stack length in bytes		*/
+	//Lab4 2020200671
+	uint32	prpgdir;	/* Page table dir		*/
 	char	prname[PNMLEN];	/* Process name				*/
 	sid32	prsem;		/* Semaphore on which process waits	*/
 	pid32	prparent;	/* ID of the creating process		*/
 	umsg32	prmsg;		/* Message sent to this process		*/
 	bool8	prhasmsg;	/* Nonzero iff msg is valid		*/
 	int16	prdesc[NDESC];	/* Device descriptors for process	*/
-	/*Lab3 2020200671:Begin*/
-	char    *uprstkptr;
-	char    *uprstkbase;
-	/*Lab3 2020200671:End*/
 };
 
 /* Marker for the top of a process stack (used to help detect overflow)	*/

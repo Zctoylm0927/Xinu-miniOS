@@ -7,46 +7,36 @@
  *------------------------------------------------------------------------
  */
 char  	*getstk(
-	  uint32	nbytes		/* Size of memory requested	*/
+	  uint32	nbytes,	
+	  struct	pgtab	*pgtable,
+	  int	is_kernel
 	)
 {
 	intmask	mask;			/* Saved interrupt mask		*/
-	struct	memblk	*prev, *curr;	/* Walk through memory list	*/
-	struct	memblk	*fits, *fitsprev; /* Record block that fits	*/
 
 	mask = disable();
-	if (nbytes == 0) {
+	if (nbytes == 0 || nbytes > (4 << 20)) {	/* ssize <= 4MB	*/
 		restore(mask);
 		return (char *)SYSERR;
 	}
+	/*Lab4 2020200671:Begin*/
+	nbytes = roundpg(nbytes);
+	uint32 npages = nbytes / PAGE_SIZE;
 
-	nbytes = (uint32) roundmb(nbytes);	/* Use mblock multiples	*/
+	char *old_log = getmem(nbytes) ,*new_log;
+	if (is_kernel) new_log = (char *)&end + 2 * PAGE_SIZE;
+	else new_log = (char *)maxheap;
+	new_log -= nbytes;
 
-	prev = &memlist;
-	curr = memlist.mnext;
-	fits = NULL;
-	fitsprev = NULL;  /* Just to avoid a compiler warning */
-
-	while (curr != NULL) {			/* Scan entire list	*/
-		if (curr->mlength >= nbytes) {	/* Record block address	*/
-			fits = curr;		/*   when request fits	*/
-			fitsprev = prev;
-		}
-		prev = curr;
-		curr = curr->mnext;
+	for (int i = 0; i < npages; i++) {
+		uint32 table = ((uint32)new_log >> 12) & 0x3FF;
+		uint32 page_addr = log2ph(old_log);
+		pgtable->entry[table] = page_addr | PT_ENTRY_P | PT_ENTRY_W;
+		if (!is_kernel) pgtable->entry[table] |= PT_ENTRY_U;
+		old_log += PAGE_SIZE;
+		new_log += PAGE_SIZE;
 	}
-
-	if (fits == NULL) {			/* No block was found	*/
-		restore(mask);
-		return (char *)SYSERR;
-	}
-	if (nbytes == fits->mlength) {		/* Block is exact match	*/
-		fitsprev->mnext = fits->mnext;
-	} else {				/* Remove top section	*/
-		fits->mlength -= nbytes;
-		fits = (struct memblk *)((uint32)fits + fits->mlength);
-	}
-	memlist.mlength -= nbytes;
 	restore(mask);
-	return (char *)((uint32) fits + nbytes - sizeof(uint32));
+	return old_log - sizeof(uint32);	
+	/*Lab4 2020200671:End*/
 }

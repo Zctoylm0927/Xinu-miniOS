@@ -13,8 +13,6 @@ pid32	create(
 	  uint32	ssize,		/* Stack size in bytes		*/
 	  pri16		priority,	/* Process priority > 0		*/
 	  char		*name,		/* Name (for debugging)		*/
-	  //Lab3 2020200671
-	  int       user,
 	  uint32	nargs,		/* Number of args that follow	*/
 	  ...
 	)
@@ -25,29 +23,67 @@ pid32	create(
 	struct	procent	*prptr;		/* Pointer to proc. table entry */
 	int32		i;
 	uint32		*a;		/* Points to list of args	*/
-	uint32		*saddr;		/* Stack address		*/
-	//Lab3 2020200671
-	uint32      *usaddr;   /* User Stack address		*/
+	uint32		*ksaddr;		/* Kernel Stack address		*/
+	uint32		*usaddr;		/* User Stack address		*/
+
 	mask = disable();
 	if (ssize < MINSTK)
 		ssize = MINSTK;
-	
-	ssize = (uint32) roundmb(ssize);
-	if ( (priority < 1) || ((pid=newpid()) == SYSERR) ||
-	     ((saddr = (uint32 *)getstk(ssize)) == (uint32 *)SYSERR) ) {
+	/*Lab4 2020200671:Begin*/
+	ssize = roundpg(ssize);
+	if ( (priority < 1) || ((pid=newpid()) == SYSERR) ) {
 		restore(mask);
 		return SYSERR;
 	}
-	
-	/*Lab3 2020200671:Begin*/
-	if(user) {
-		if ( (priority < 1) || ((pid=newpid()) == SYSERR) ||
-			((usaddr = (uint32 *)getstk(ssize)) == (uint32 *)SYSERR) ) {
-			restore(mask);
-			return SYSERR;
-		}
+	struct pgtab *newpgdir = (struct pgtab *)getmem(PAGE_SIZE);
+	if(newpgdir == (struct pgtab *)SYSERR) {
+		restore(mask);
+		return SYSERR;
 	}
-	/*Lab3 2020200671:End*/
+	memset((void *)newpgdir, 0, PAGE_SIZE);
+
+	struct pgtab *newpt0, *oldpt0, *newptx;
+	newpt0 = (struct pgtab *)getmem(PAGE_SIZE);
+	if(newpt0 == (struct pgtab *)SYSERR) {
+		freemem((char *)newpgdir, PAGE_SIZE);
+		restore(mask);
+		return SYSERR;
+	}
+	oldpt0 = (struct pgtab *)0x800000;
+	for(i = 0; i < PT_NENTRY; ++ i)
+		newpt0->entry[i] = oldpt0->entry[i];
+	newptx = (struct pgtab *)getmem(PAGE_SIZE);
+	if(newptx == (struct pgtab *)SYSERR) {
+		freemem((char *)newpgdir, PAGE_SIZE);
+		freemem((char *)newpt0, PAGE_SIZE);
+		restore(mask);
+		return SYSERR;
+	}
+	memset((void *)newptx, 0, PAGE_SIZE);
+	newpgdir->entry[0] = log2ph((char *)newpt0) | PT_ENTRY_P | PT_ENTRY_W | PT_ENTRY_U;
+	newpgdir->entry[1] = pgdir->entry[1];
+	newpgdir->entry[2] = log2ph((char *)newpgdir) | PT_ENTRY_P | PT_ENTRY_W | PT_ENTRY_U;
+	newpgdir->entry[1015] = log2ph((char *)newptx) | PT_ENTRY_P | PT_ENTRY_W | PT_ENTRY_U;
+
+
+	ksaddr = (uint32 *)getstk(KERNELSTK, newpt0, TRUE);
+	if(ksaddr == (uint32 *)SYSERR) {
+		freemem((char *)newpgdir, PAGE_SIZE);
+		freemem((char *)newpt0, PAGE_SIZE);
+		freemem((char *)newptx, PAGE_SIZE);
+		restore(mask);
+		return SYSERR;
+	}
+	usaddr = (uint32 *)getstk(ssize, newptx, FALSE);
+	if(usaddr == (uint32 *)SYSERR) {
+		freemem((char *)newpgdir, PAGE_SIZE);
+		freemem((char *)newpt0, PAGE_SIZE);
+		freemem((char *)newptx, PAGE_SIZE);
+		freestk((char *)ksaddr, KERNELSTK);
+		restore(mask);
+		return SYSERR;
+	}
+	/*Lab4 2020200671:End*/
 
 	prcount++;
 	prptr = &proctab[pid];
@@ -55,11 +91,10 @@ pid32	create(
 	/* Initialize process table entry for new process */
 	prptr->prstate = PR_SUSP;	/* Initial state is suspended	*/
 	prptr->prprio = priority;
-	prptr->prstkbase = (char *)saddr;
-	/*Lab3 2020200671:Begin*/
-	prptr->uprstkbase = prptr->uprstkptr = NULL;
-	if(user) prptr->uprstkbase = (char *)usaddr;
-	/*Lab3 2020200671:End*/
+	//Lab4 2020200671
+	prptr->kstkbase = (char *)ksaddr;
+	prptr->userstkbase = (char *)usaddr;
+	prptr->prpgdir = log2ph((char *)newpgdir);
 	prptr->prstklen = ssize;
 	prptr->prname[PNMLEN-1] = NULLCH;
 	for (i=0 ; i<PNMLEN-1 && (prptr->prname[i]=name[i])!=NULLCH; i++)
@@ -73,76 +108,86 @@ pid32	create(
 	prptr->prdesc[1] = CONSOLE;
 	prptr->prdesc[2] = CONSOLE;
 
-	/* Initialize stack as if the process was called		*/
-
-	*saddr = STACKMAGIC;
-	savsp = (uint32)saddr;
-	
-	/*Lab3 2020200671:Begin*/
-	if(user) {
-		*usaddr = STACKMAGIC;
-		a = (uint32 *)(&nargs + 1);	
-		a += nargs -1;
-		for ( ; nargs > 0 ; nargs--)
-			*--usaddr = *a--;
-		*--usaddr = (long)u2020200671_ret_u2k;
-	}
-	/*Lab3 2020200671:End*/
-
-
+	/* Initialize user stack*/
+	*usaddr = STACKMAGIC;
 	/* Push arguments */
 	a = (uint32 *)(&nargs + 1);	/* Start of args		*/
 	a += nargs -1;			/* Last argument		*/
-	for ( ; nargs > 0 ; nargs--)	/* Machine dependent; copy args	*/
-		*--saddr = *a--;	/* onto created process's stack	*/
-	*--saddr = (long)INITRET;	/* Push on return address	*/
+	for (i = nargs ; i > 0 ; i--)	/* Machine dependent; copy args	*/
+		*--usaddr = *a--;	/* onto created process's stack	*/
+	*--usaddr = (long)INITRET;	/* Push on return address	*/
+	usaddr = (uint32 *)(USTKBASE - ((uint32)prptr->userstkbase - (uint32)usaddr));
 
-	/*Lab3 2020200671:Begin*/
-	TSS.ss0 = (0x3 << 3);
-	TSS.esp0 = (long)saddr;
-	if(user) {
-		*--saddr = BASE_USER_SS;
-		*--saddr = (uint32)usaddr;
-		asm("pushfl"); saddr--;
-		*--saddr = BASE_USER_CS;
-	}
-	/*Lab3 2020200671:End*/
+	/* Initialize kernel stack*/
+	*ksaddr = STACKMAGIC;
+	savsp = (KSTKBASE - ((uint32)prptr->kstkbase - (uint32)(ksaddr)));
+	/* Push arguments */
+	a = (uint32 *)(&nargs + 1);	/* Start of args		*/
+	a += nargs -1;			/* Last argument		*/
+	for (i = nargs ; i > 0 ; i--)	/* Machine dependent; copy args	*/
+		*--ksaddr = *a--;	/* onto created process's stack	*/
+	*--ksaddr = (uint32)INITRET;	/* Push on return address	*/
+	//Lab3 2020200671
+	//TSS.ss0 = (0x3 << 3);
+	//TSS.esp0 = (long) ksaddr;
+	prptr->prkstp = (char *)(KSTKBASE - ((uint32)prptr->kstkbase - (uint32)(ksaddr)));
+
+	*--ksaddr = BASE_USER_SS;	//SS
+	*--ksaddr = (uint32)usaddr;	/*	ESP		*/
+	*--ksaddr = 0x00000200;	/*	EFLAGS		*/
+	*--ksaddr = BASE_USER_CS;	//CS
+	*--ksaddr = (uint32)funcaddr;
+	*--ksaddr = BASE_USER_DS;	//DS
+
 
 	/* The following entries on the stack must match what ctxsw	*/
 	/*   expects a saved process state to contain: ret address,	*/
 	/*   ebp, interrupt mask, flags, registers, and an old SP	*/
 
-	*--saddr = (long)funcaddr;	/* Make the stack look like it's*/
-					/*   half-way through a call to	*/
-					/*   ctxsw that "returns" to the*/
-					/*   new process		*/
-
-	/*Lab3 2020200671:Begin*/
-	if(user) {
-		*--saddr = BASE_USER_DS;
-		*--saddr = (long)k2020200671_ret_k2u;
-	}
-	/*Lab3 2020200671:End*/
-	*--saddr = savsp;		/* This will be register ebp	*/
+	*--ksaddr = (uint32)k2020200671_ret_k2u;
+	*--ksaddr = savsp;		/* This will be register ebp	*/
 					/*   for process exit		*/
-	savsp = (uint32) saddr;		/* Start of frame for ctxsw	*/
-	*--saddr = 0x00000200;		/* New process runs with	*/
+	savsp = (KSTKBASE - ((uint32)prptr->kstkbase - (uint32)(ksaddr)));		/* Start of frame for ctxsw	*/
+	*--ksaddr = 0x00000200;		/* New process runs with	*/
 					/*   interrupts enabled		*/
 
 	/* Basically, the following emulates an x86 "pushal" instruction*/
 
-	*--saddr = 0;			/* %eax */
-	*--saddr = 0;			/* %ecx */
-	*--saddr = 0;			/* %edx */
-	*--saddr = 0;			/* %ebx */
-	*--saddr = 0;			/* %esp; value filled in below	*/
-	pushsp = saddr;			/* Remember this location	*/
-	*--saddr = savsp;		/* %ebp (while finishing ctxsw)	*/
-	*--saddr = 0;			/* %esi */
-	*--saddr = 0;			/* %edi */
-	*pushsp = (unsigned long) (prptr->prstkptr = (char *)saddr);
-	//Lab3 2020200671
-	if(user)prptr->uprstkptr = (char*)usaddr;
+	*--ksaddr = 0;			/* %eax */
+	*--ksaddr = 0;			/* %ecx */
+	*--ksaddr = 0;			/* %edx */
+	*--ksaddr = 0;			/* %ebx */
+	*--ksaddr = 0;			/* %esp; value filled in below	*/
+	pushsp = ksaddr;			/* Remember this location	*/
+	*--ksaddr = savsp;		/* %ebp (while finishing ctxsw)	*/
+	*--ksaddr = 0;			/* %esi */
+	*--ksaddr = 0;			/* %edi */
+
+	/*Lab4 2020200671:Begin*/
+	prptr->prstkptr = (char *)(KSTKBASE - ((uint32)prptr->kstkbase - (uint32)(ksaddr)));
+	*pushsp = (uint32)prptr->prstkptr;
+
+	fill_pgentry((char *)newpgdir, 0, 0, TRUE);
+	invlpg((void *)newpgdir);
+	fill_pgentry((char *)newpt0, 0, 0, TRUE);
+	invlpg((void *)newpt0);
+	fill_pgentry((char *)newptx, 0, 0, TRUE);
+	invlpg((void *)newptx);
+
+	//lab4 need to do
+	for (i = 0; i < KERNELSTK; i += PAGE_SIZE) {
+		kprintf("Alloc kerpage page at 0x%x\n", prptr->kstkbase + i);
+		fill_pgentry(prptr->kstkbase + i, 0, 0, TRUE);
+		invlpg((void *)(prptr->kstkbase + i));
+	}
+	for (i = 0; i < ssize; i += PAGE_SIZE) {
+		kprintf("Alloc user page at 0x%x\n", prptr->userstkbase + i);
+		fill_pgentry(prptr->userstkbase + i, 0, 0, TRUE);
+		invlpg((void *)(prptr->userstkbase + i));
+	}
+	prptr->kstkbase = (char *)KSTKBASE;
+	prptr->userstkbase = (char *)USTKBASE;
+	/*Lab4 2020200671:End*/
 	restore(mask);
 	return pid;
 }

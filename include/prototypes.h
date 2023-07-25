@@ -1,6 +1,9 @@
-/* in file addargs.c */
-extern	status	addargs(pid32, int32, int32[], int32,int user, char *, void *);
+/* in file Lab4_usyscall.c */
+extern uint32 do_syscall(uint32 id, uint32 args_count, ...);
 
+/* in file addargs.c */
+extern	status	addargs(pid32, int32, int32[], int32,char *, void *);
+#define u2020200671_syscall_addargs(...) do_generic_syscall(status, SYSCALL_ADDARGS, __VA_ARGS__)
 
 /* in file ascdate.c */
 extern	status	ascdate(uint32, char *);
@@ -28,12 +31,14 @@ extern	syscall	close(did32);
 
 /* in file control.c */
 extern	syscall	control(did32, int32, int32, int32);
+#define u2020200671_syscall_control(...) do_generic_syscall(syscall, SYSCALL_CONTROL, __VA_ARGS__)
 
 /* in file create.c */
-extern	pid32	create(void *, uint32, pri16, char *, int, uint32, ...);
+extern	pid32	create(void *, uint32, pri16, char *, uint32, ...);
+#define u2020200671_syscall_create(...) do_generic_syscall(pid32, SYSCALL_CREATE, __VA_ARGS__)
 
 /* in file ctxsw.S */
-extern	void	ctxsw(void *, void *);
+extern	void	ctxsw(void *, void *, uint32);
 
 /* in file exit.c */
 extern	void	exit(void);
@@ -71,12 +76,10 @@ extern	char	*getmem(uint32);
 
 /* in file getpid.c */
 extern	pid32	getpid(void);
+#define u2020200671_syscall_getpid(...) do_argless_syscall(pid32, SYSCALL_GETPID)
 
 /* in file getprio.c */
 extern	syscall	getprio(pid32);
-
-/* in file getstk.c */
-extern	char	*getstk(uint32);
 
 /* in file getticks.c */
 extern	uint64	getticks(void);
@@ -117,6 +120,7 @@ extern	devcall	ionull(void);
 
 /* in file kill.c */
 extern	syscall	kill(pid32);
+#define u2020200671_syscall_kill(...) do_generic_syscall(syscall, SYSCALL_KILL, __VA_ARGS__)
 
 /* in file lexan.c */
 extern	int32	lexan(char *, int32, char *, int32 *, int32 [], int32 []);
@@ -241,6 +245,7 @@ extern	qid16	newqueue(void);
 
 /* in file open.c */
 extern	syscall	open(did32, char *, char *);
+#define u2020200671_syscall_open(...) do_generic_syscall(syscall, SYSCALL_OPEN, __VA_ARGS__)
 
 /* in file panic.c */
 extern	void	panic(char *);
@@ -297,15 +302,18 @@ extern	devcall	ramwrite(struct dentry *, char *, int32);
 
 /* in file read.c */
 extern	syscall	read(did32, char *, uint32);
+#define u2020200671_syscall_read(...) do_generic_syscall(syscall, SYSCALL_READ, __VA_ARGS__)
 
 /* in file ready.c */
 extern	status	ready(pid32);
 
 /* in file receive.c */
 extern	umsg32	receive(void);
+#define u2020200671_syscall_receive() do_argless_syscall(umsg32, SYSCALL_RECEIVE)
 
 /* in file recvclr.c */
 extern	umsg32	recvclr(void);
+#define u2020200671_syscall_recvclr() do_argless_syscall(umsg32, SYSCALL_RECVCLR)
 
 /* in file recvtime.c */
 extern	umsg32	recvtime(int32);
@@ -319,6 +327,7 @@ extern	void	restore(intmask);
 
 /* in file resume.c */
 extern	pri16	resume(pid32);
+#define u2020200671_syscall_resume(...) do_generic_syscall(pri16, SYSCALL_RESUME, __VA_ARGS__)
 
 /* in file seek.c */
 extern	syscall	seek(did32, uint32);
@@ -349,6 +358,7 @@ extern	syscall	signaln(sid32, int32);
 
 /* in file sleep.c */
 extern	syscall	sleepms(int32);
+#define u2020200671_syscall_sleepms(...) do_generic_syscall(syscall, SYSCALL_SLEEPMS, __VA_ARGS__)
 extern	syscall	sleep(int32);
 
 /* in file start.S */
