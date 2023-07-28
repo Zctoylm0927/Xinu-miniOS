@@ -1,0 +1,13 @@
+set history save on
+set history filename ../.gdb_history
+set history remove-duplicates 1
+set remotetimeout 999999999
+set tcp connect-timeout unlimited
+
+set disassembly-flavor intel
+file xinu.elf
+target remote :1234
+b u2020200671_xsh_lab5
+c
+p/x $cr0
+p/x $cr3

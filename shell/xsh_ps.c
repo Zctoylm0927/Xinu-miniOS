@@ -38,15 +38,22 @@ shellcmd xsh_ps(int nargs, char *args[])
 	}
 
 	/* Print header for items from the process table */
+	/* Lab5 2020200671:Begin*/
+	// u2020200671_syscall_printf("%3s %-16s %5s %4s %4s %15s %17s %-10s %10s\n",
+	// 	   "Pid", "Name", "State", "Prio", "Ppid", "User Stack Base",
+	// 	   "Kernel Stack Base", "Stack Ptr", "Stack Size");
 
-	u2020200671_syscall_printf("%3s %-16s %5s %4s %4s %15s %17s %-10s %10s\n",
-		   "Pid", "Name", "State", "Prio", "Ppid", "User Stack Base",
-		   "Kernel Stack Base", "Stack Ptr", "Stack Size");
+	// u2020200671_syscall_printf("%3s %-16s %5s %4s %4s %15s %17s %-10s %10s\n",
+	// 	   "---", "----------------", "-----", "----", "----",
+	// 	   "---------------", "-----------------", "----------", 
+	// 	   "----------");
+	
+	u2020200671_syscall_printf("%3s %-16s %5s %4s %4s %-10s\n",
+		   "Pid", "Name", "State", "Prio", "Ppid", "Stack Ptr");
 
-	u2020200671_syscall_printf("%3s %-16s %5s %4s %4s %15s %17s %-10s %10s\n",
-		   "---", "----------------", "-----", "----", "----",
-		   "---------------", "-----------------", "----------", 
-		   "----------");
+	u2020200671_syscall_printf("%3s %-16s %5s %4s %4s %-10s\n",
+		   "---", "----------------", "-----", "----", "----", "----------");
+	/* Lab5 2020200671:End*/
 
 	/* Output information for each process */
 
@@ -55,10 +62,15 @@ shellcmd xsh_ps(int nargs, char *args[])
 		if (prptr->prstate == PR_FREE) {  /* skip unused slots	*/
 			continue;
 		}
-		u2020200671_syscall_printf("%3d %-16s %s %4d %4d 0x%08X 0x%08X 0x%08X %8d\n",
+		/* Lab5 2020200671:Begin*/
+		// u2020200671_syscall_printf("%3d %-16s %s %4d %4d 0x%08X 0x%08X 0x%08X %8d\n",
+		// 	i, prptr->prname, pstate[(int)prptr->prstate],
+		// 	prptr->prprio, prptr->prparent, prptr->userstkbase,
+		// 	prptr->kstkbase, prptr->prstkptr, prptr->prstklen);
+		u2020200671_syscall_printf("%3d %-16s %s %4d %4d 0x%08X\n",
 			i, prptr->prname, pstate[(int)prptr->prstate],
-			prptr->prprio, prptr->prparent, prptr->userstkbase,
-			prptr->kstkbase, prptr->prstkptr, prptr->prstklen);
+			prptr->prprio, prptr->prparent, prptr->prstkptr);
+		/* Lab5 2020200671:End*/
 	}
 	return 0;
 }

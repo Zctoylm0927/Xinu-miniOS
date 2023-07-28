@@ -25,7 +25,8 @@ const	struct	cmdent	cmdtab[] = {
 	{"?",		FALSE,	xsh_help},
 	{"lab2",	FALSE,	_2020200671_xsh_lab2},
 	{"lab3",	FALSE,	u2020200671_xsh_lab3},
-	{"lab4",	FALSE,	u2020200671_xsh_lab4}
+	{"lab4",	FALSE,	u2020200671_xsh_lab4},
+	{"lab5",	FALSE,	u2020200671_xsh_lab5}
 
 };
 

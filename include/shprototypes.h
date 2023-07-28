@@ -81,3 +81,6 @@ extern  shellcmd u2020200671_xsh_lab3(int nargs, char *args[]);
 
 /* in file xsh_lab4.c */
 extern  shellcmd u2020200671_xsh_lab4(int nargs, char *args[]);
+
+/* in file xsh_lab5.c */
+extern  shellcmd u2020200671_xsh_lab5(int nargs, char *args[]);

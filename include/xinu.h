@@ -28,3 +28,4 @@
 #include <Lab3.h>
 #include <tss.h>
 #include <Lab4.h>
+#include <Lab5.h>

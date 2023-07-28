@@ -27,12 +27,14 @@ VERSIONFILE	=	version
 LDSCRIPT	=	ld.script
 MKVERS		=	$(TOPDIR)/compile/bin/mkvers
 
+#lab5 2020200671
 REBUILDFLAGS	=	-s $(TOPDIR)/system  debug.c		\
 			-s $(TOPDIR)/lib			\
 			-s $(TOPDIR)/device/tty			\
 			-s $(TOPDIR)/device/nam			\
 			-s $(TOPDIR)/device/ram			\
 			-s $(TOPDIR)/device/lfs			\
+			-s $(TOPDIR)/device/kbd			\
 			-s $(TOPDIR)/shell  
 
 INCLUDE		=	-I$(TOPDIR)/include

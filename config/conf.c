@@ -94,5 +94,12 @@ struct	dentry	devtab[NDEVS] =
 	  (void *)lflinit, (void *)ioerr, (void *)lflclose,
 	  (void *)lflread, (void *)lflwrite, (void *)lflseek,
 	  (void *)lflgetc, (void *)lflputc, (void *)lflcontrol,
-	  (void *)0x0, (void *)ionull, 0 }
+	  (void *)0x0, (void *)ionull, 0 },
+
+/* KBD is kbd */
+	{ 11, 0, "KBD",
+	  (void *)kbdinit, (void *)ioerr, (void *)ioerr,
+	  (void *)kbdread, (void *)ioerr, (void *)ioerr,
+	  (void *)kbdgetc, (void *)kbdputc, (void *)ioerr,
+	  (void *)0x3d4, (void *)kbdhandler, 33 }
 };

@@ -14,7 +14,8 @@
 
 /* Shell banner (assumes VT100) */
 
-#define	SHELL_BAN0	"\033[31;1m"
+//Lab5 2020200671
+#define	SHELL_BAN0	"\033[31m\033[1m"
 #define SHELL_BAN1      "------------------------------------------"
 #define SHELL_BAN2      "   __    __   _____    _   _    _    _    "
 #define SHELL_BAN3      "   \\ \\  / /  |__ __|  | \\ | |  | |  | |   "
