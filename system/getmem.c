@@ -6,6 +6,8 @@
  *  getmem  -  Allocate heap storage, returning lowest word address
  *------------------------------------------------------------------------
  */
+
+/*Lab4 2020200671:Begin*/
 char  	*getmem(
 	  uint32	nbytes		/* Size of memory requested	*/
 	)
@@ -35,3 +37,4 @@ char  	*getmem(
 	restore(mask);
 	return mem_begin;
 }
+/*Lab4 2020200671:End*/

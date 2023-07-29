@@ -1,12 +1,12 @@
-/* Lab5 kbddispatch.S - kbddispatch */
+/* Lab5 kbddisp.S - kbddisp */
 
 #include <icu.s>
 
 		.text
-		.globl  kbddispatch	
+		.globl  kbddisp	
 		.globl	kbdhandler
 
-kbddispatch:
+kbddisp:
 		pushal			/* Save general-purpose regs.	*/
 		pushfl			/* Save the flags register	*/
 		cli			/* Prevent further interrupts	*/

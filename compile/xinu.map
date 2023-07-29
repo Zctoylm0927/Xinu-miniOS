@@ -1749,8 +1749,8 @@ Linker script and memory map
                 0x000000000010f36b                defevec
  .text          0x000000000010f43f       0x10 binaries/ttydispatch.o
                 0x000000000010f43f                ttydispatch
- .text          0x000000000010f44f       0x10 binaries/kbddispatch.o
-                0x000000000010f44f                kbddispatch
+ .text          0x000000000010f44f       0x10 binaries/kbddisp.o
+                0x000000000010f44f                kbddisp
  *(.rodata .rodata.*)
  .rodata        0x000000000010f45f        0xe binaries/Lab3_ucreate.o
  *fill*         0x000000000010f46d        0x3 
@@ -2450,7 +2450,7 @@ Linker script and memory map
  .data          0x00000000001158e0        0x0 binaries/intr.o
                 0x00000000001158e0                _saveint
  .data          0x00000000001158e0        0x0 binaries/ttydispatch.o
- .data          0x00000000001158e0        0x0 binaries/kbddispatch.o
+ .data          0x00000000001158e0        0x0 binaries/kbddisp.o
                 0x00000000001158e0                edata = ABSOLUTE (.)
                 0x0000000000116000                . = ALIGN (0x1000)
  *fill*         0x00000000001158e0      0x720 
@@ -2668,7 +2668,7 @@ Linker script and memory map
  .bss           0x00000000001160a4        0x0 binaries/ctxsw.o
  .bss           0x00000000001160a4        0x0 binaries/intr.o
  .bss           0x00000000001160a4        0x0 binaries/ttydispatch.o
- .bss           0x00000000001160a4        0x0 binaries/kbddispatch.o
+ .bss           0x00000000001160a4        0x0 binaries/kbddisp.o
  *(COMMON)
  *fill*         0x00000000001160a4       0x1c 
  COMMON         0x00000000001160c0       0xf4 binaries/bufinit.o
@@ -2933,10 +2933,10 @@ LOAD binaries/clkdisp.o
 LOAD binaries/ctxsw.o
 LOAD binaries/intr.o
 LOAD binaries/ttydispatch.o
-LOAD binaries/kbddispatch.o
+LOAD binaries/kbddisp.o
 OUTPUT(../compile/xinu.elf elf32-i386)
 
-.debug_line     0x0000000000000000    0x12528
+.debug_line     0x0000000000000000    0x12524
  .debug_line    0x0000000000000000       0xbe binaries/start.o
  .debug_line    0x00000000000000be      0x1a2 binaries/Lab3_ucreate.o
  .debug_line    0x0000000000000260      0x186 binaries/Lab4_alloc_free.o
@@ -3136,7 +3136,7 @@ OUTPUT(../compile/xinu.elf elf32-i386)
  .debug_line    0x0000000000012296       0x4f binaries/ctxsw.o
  .debug_line    0x00000000000122e5      0x19b binaries/intr.o
  .debug_line    0x0000000000012480       0x54 binaries/ttydispatch.o
- .debug_line    0x00000000000124d4       0x54 binaries/kbddispatch.o
+ .debug_line    0x00000000000124d4       0x50 binaries/kbddisp.o
 
 .debug_info     0x0000000000000000    0xa6a4c
  .debug_info    0x0000000000000000       0x26 binaries/start.o
@@ -3337,7 +3337,7 @@ OUTPUT(../compile/xinu.elf elf32-i386)
  .debug_info    0x00000000000a69b4       0x26 binaries/ctxsw.o
  .debug_info    0x00000000000a69da       0x26 binaries/intr.o
  .debug_info    0x00000000000a6a00       0x26 binaries/ttydispatch.o
- .debug_info    0x00000000000a6a26       0x26 binaries/kbddispatch.o
+ .debug_info    0x00000000000a6a26       0x26 binaries/kbddisp.o
 
 .debug_abbrev   0x0000000000000000     0xe6af
  .debug_abbrev  0x0000000000000000       0x14 binaries/start.o
@@ -3538,7 +3538,7 @@ OUTPUT(../compile/xinu.elf elf32-i386)
  .debug_abbrev  0x000000000000e65f       0x14 binaries/ctxsw.o
  .debug_abbrev  0x000000000000e673       0x14 binaries/intr.o
  .debug_abbrev  0x000000000000e687       0x14 binaries/ttydispatch.o
- .debug_abbrev  0x000000000000e69b       0x14 binaries/kbddispatch.o
+ .debug_abbrev  0x000000000000e69b       0x14 binaries/kbddisp.o
 
 .debug_aranges  0x0000000000000000     0x18c8
  .debug_aranges
@@ -3938,9 +3938,9 @@ OUTPUT(../compile/xinu.elf elf32-i386)
  .debug_aranges
                 0x0000000000001888       0x20 binaries/ttydispatch.o
  .debug_aranges
-                0x00000000000018a8       0x20 binaries/kbddispatch.o
+                0x00000000000018a8       0x20 binaries/kbddisp.o
 
-.debug_str      0x0000000000000000     0x2a0a
+.debug_str      0x0000000000000000     0x2a06
  .debug_str     0x0000000000000000       0x40 binaries/start.o
  .debug_str     0x0000000000000040      0x853 binaries/Lab3_ucreate.o
                                         0x8d1 (size before relaxing)
@@ -4338,8 +4338,8 @@ OUTPUT(../compile/xinu.elf elf32-i386)
                                          0x3f (size before relaxing)
  .debug_str     0x00000000000029d2       0x1c binaries/ttydispatch.o
                                          0x4a (size before relaxing)
- .debug_str     0x00000000000029ee       0x1c binaries/kbddispatch.o
-                                         0x4a (size before relaxing)
+ .debug_str     0x00000000000029ee       0x18 binaries/kbddisp.o
+                                         0x46 (size before relaxing)
 
 .comment        0x0000000000000000       0x2b
  .comment       0x0000000000000000       0x2b binaries/Lab3_ucreate.o

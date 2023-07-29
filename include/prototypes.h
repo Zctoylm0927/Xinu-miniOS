@@ -444,8 +444,8 @@ extern	void	vgainit(void);
 extern  devcall vgaputc(char ch, bool8);
 extern	devcall	vgaerase(bool8);
 
-/* in file kbddispatch.S */
-extern	interrupt	kbddispatch(void);
+/* in file kbddisp.S */
+extern	interrupt	kbddisp(void);
 
 /* in file kbdread.c */
 extern	devcall	kbdread(struct dentry *, char *, int32);
