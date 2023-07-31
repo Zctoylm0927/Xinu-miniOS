@@ -66,12 +66,12 @@ nam:
 
 /*Lab5 2020200671:Begin*/
 /* type of keyboard device */
-kbd:
-	on top
+kbdvga:
+	on kbdvga
 		-i kbdinit	-o ioerr	-c ioerr
 		-r kbdread 	-g kbdgetc 	-p kbdputc
 		-w ioerr 	-s ioerr 	-n ioerr
-		-intr kbdhandler
+		-intr kbddisp
 /*Lab5 2020200671:End*/
 
 %%
@@ -80,7 +80,8 @@ kbd:
 /*   will be present in the system					*/
 
    /* Define the console device to be a tty and specify CSR*/
-   CONSOLE is tty  on uart  csr 0001770 -irq 0044
+   /*Lab5 2020200671:Begin*/
+   CONSOLE is kbdvga  on kbdvga  csr 0001724 -irq 0041
 
    /* Define a null device */
    NULLDEV is null on nothing
@@ -103,10 +104,6 @@ kbd:
    LFILE3 is lfl on lfs
    LFILE4 is lfl on lfs
    LFILE5 is lfl on lfs
-
-	/*Lab5 2020200671:Begin*/
-	KBD is kbd on top csr 0001724 -irq 0041
-	/*Lab5 2020200671:End*/
 
 %%
 

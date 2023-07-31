@@ -437,28 +437,3 @@ extern	syscall	yield(void);
 #define	ntohs(x)  ((0xff & ((x)>>8)) | ( (0xff & (x)) << 8))
 #define	ntohl(x)  ((((x)>>24) & 0x000000ff) | (((x)>> 8) & 0x0000ff00) | \
 		   (((x)<<8) & 0x00ff0000) | (((x)<<24) & 0xff000000))
-
-/*Lab5 2020200671:Begin*/
-/* in file kbdcontrol.c */
-extern	void	vgainit(void);
-extern  devcall vgaputc(char ch, bool8);
-extern	devcall	vgaerase(bool8);
-
-/* in file kbddisp.S */
-extern	interrupt	kbddisp(void);
-
-/* in file kbdread.c */
-extern	devcall	kbdread(struct dentry *, char *, int32);
-
-/* in file kbdgetc.c */
-extern	devcall	kbdgetc(struct dentry *);
-
-/* in file kbdputc.c */
-extern	devcall	kbdputc(struct dentry *, char);
-
-/* in file kbdhandler.c */
-extern	void	kbdhandler(void);
-
-/* in file kbdinit.c */
-extern	devcall	kbdinit(void);
-/*Lab5 2020200671:End*/

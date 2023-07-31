@@ -19,12 +19,12 @@ struct	dentry	devtab[NDEVS] =
  * dev-csr-address, intr-handler, irq
  */
 
-/* CONSOLE is tty */
+/* CONSOLE is kbdvga */
 	{ 0, 0, "CONSOLE",
-	  (void *)ttyinit, (void *)ionull, (void *)ionull,
-	  (void *)ttyread, (void *)ttywrite, (void *)ioerr,
-	  (void *)ttygetc, (void *)ttyputc, (void *)ttycontrol,
-	  (void *)0x3f8, (void *)ttydispatch, 36 },
+	  (void *)kbdinit, (void *)ioerr, (void *)ioerr,
+	  (void *)kbdread, (void *)ioerr, (void *)ioerr,
+	  (void *)kbdgetc, (void *)kbdputc, (void *)ioerr,
+	  (void *)0x3d4, (void *)kbddisp, 33 },
 
 /* NULLDEV is null */
 	{ 1, 0, "NULLDEV",
@@ -94,12 +94,5 @@ struct	dentry	devtab[NDEVS] =
 	  (void *)lflinit, (void *)ioerr, (void *)lflclose,
 	  (void *)lflread, (void *)lflwrite, (void *)lflseek,
 	  (void *)lflgetc, (void *)lflputc, (void *)lflcontrol,
-	  (void *)0x0, (void *)ionull, 0 },
-
-/* KBD is kbd */
-	{ 11, 0, "KBD",
-	  (void *)kbdinit, (void *)ioerr, (void *)ioerr,
-	  (void *)kbdread, (void *)ioerr, (void *)ioerr,
-	  (void *)kbdgetc, (void *)kbdputc, (void *)ioerr,
-	  (void *)0x3d4, (void *)kbdhandler, 33 }
+	  (void *)0x0, (void *)ionull, 0 }
 };
